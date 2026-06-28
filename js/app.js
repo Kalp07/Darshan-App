@@ -113,10 +113,20 @@ function buildGrid() {
 // YOUTUBE LIVE-STATUS CHECK
 // ══════════════════════════════════════════════
 async function checkAll() {
-  setStatus('checking', 'સ્થિતિ તપાસવામાં...');
+  setStatus('checking', 'મંદિરની લાઈવ સ્થિતિ તપાસવામાં આવી રહી છે...');
   await Promise.allSettled(TEMPLES.map(checkOne));
-  const anyLive = TEMPLES.some(t => STATUS[t.channelId]?.live);
-  setStatus('done', anyLive ? 'કેટલાક મંદિર હાલ લાઈવ છે ✦' : 'હાલ કોઈ લાઈવ નથી');
+  
+  const total = TEMPLES.length;
+  const liveCount = TEMPLES.filter(t => STATUS[t.channelId]?.live).length;
+  
+  let msg = 'હાલ કોઈ મંદિર લાઈવ નથી';
+  if (liveCount === total) {
+    msg = 'બધા જ મંદિર હાલ લાઈવ છે!';
+  } else if (liveCount > 0) {
+    msg = 'કેટલાક મંદિર હાલ લાઈવ છે';
+  }
+  
+  setStatus('done', msg);
 }
 
 async function checkOne(t) {
@@ -130,9 +140,9 @@ async function checkOne(t) {
     STATUS[t.channelId] = data;
 
     if (data.live) {
-      badge(t.id, "live", "લાઈવ"); // Only keep blinking dot, remove ● dot
+      badge(t.id, "live", "લાઈવ");
     } else if (data.upcoming) {
-      badge(t.id, "upcoming", "શેડ્યૂલ કરેલ");
+      badge(t.id, "upcoming", "નિયત કરેલ છે");
     } else {
       badge(t.id, "offline", "ઑફલાઇન");
     }
@@ -221,7 +231,6 @@ async function openTemple(t) {
   }
 }
 
-// Catch embedding errors (like Vaishno Devi) and show offline screen guiding to YouTube
 function onPlayerError(event) {
   console.warn("YouTube Player error:", event.data);
   // 101 or 150 = embedding restricted by owner
