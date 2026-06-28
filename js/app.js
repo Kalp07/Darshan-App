@@ -48,9 +48,17 @@ let ytReady = false;       // YouTube IFrame API ready status
 const homeEl    = document.getElementById('home');
 const playerEl  = document.getElementById('player');
 const offlineEl = document.getElementById('offline-screen');
-const gridEl    = document.getElementById('grid');
-const frameEl   = document.getElementById('frame');
-const backEl    = document.getElementById('back');
+const gridEl      = document.getElementById('grid');
+const containerEl = document.getElementById('frame-container');
+const backEl      = document.getElementById('back');
+
+function resetPlayerDOM() {
+  if (player) {
+    try { player.destroy(); } catch (e) {}
+    player = null;
+  }
+  containerEl.innerHTML = '<div id="frame"></div>';
+}
 const catchEl   = document.getElementById('catch');
 const sdot      = document.getElementById('sdot');
 const stext     = document.getElementById('stext');
@@ -211,9 +219,14 @@ async function openTemple(t) {
       });
     } else {
       // Fallback if API not ready
-      frameEl.src =
-        `https://www.youtube-nocookie.com/embed/${s.videoId}` +
-        `?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
+      containerEl.innerHTML = `
+        <iframe class="p-frame-inner" id="frame"
+          src="https://www.youtube-nocookie.com/embed/${s.videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1"
+          allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+          allowfullscreen
+          referrerpolicy="no-referrer-when-downgrade"
+          style="width: 100%; height: 100%; border: none; position: absolute; inset: 0;">
+        </iframe>`;
     }
   } else {
     offlineTempleNameEl.textContent = t.name;
@@ -242,11 +255,7 @@ function onPlayerError(event) {
     offlineSubEl.textContent = "આ વિડિઓ ફક્ત YouTube પર જ જોઈ શકાશે";
     showScreen(offlineEl);
 
-    if (player) {
-      try { player.destroy(); } catch (e) {}
-      player = null;
-    }
-    frameEl.src = 'about:blank';
+    resetPlayerDOM();
   }
 }
 
@@ -324,11 +333,7 @@ function showScreen(el) {
 function goHome() {
   clearTimeout(backTimer);
   hideBack();
-  if (player) {
-    try { player.destroy(); } catch (e) {}
-    player = null;
-  }
-  frameEl.src = 'about:blank';
+  resetPlayerDOM();
   showScreen(homeEl);
   currentTemple = null;
 }
@@ -339,3 +344,13 @@ function goHome() {
 refreshBtn.addEventListener('click', checkAll);
 buildGrid();
 checkAll();
+
+// Load the YouTube Iframe Player API asynchronously
+if (!window.YT) {
+  const tag = document.createElement('script');
+  tag.src = "https://www.youtube.com/iframe_api";
+  const firstScriptTag = document.getElementsByTagName('script')[0];
+  firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+} else if (window.YT && window.YT.Player) {
+  ytReady = true;
+}

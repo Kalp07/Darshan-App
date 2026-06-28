@@ -263,6 +263,11 @@ body {
   width: 100%; height: 100%;
   border: none;
 }
+.p-frame iframe {
+  width: 100% !important;
+  height: 100% !important;
+  border: none;
+}
 
 /* invisible overlay that re-shows the back button on tap */
 .tap-catch {

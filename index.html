@@ -54,11 +54,9 @@
   <div class="orn orn-bl"><svg viewBox="0 0 26 26"><path d="M2 24V2h22" stroke="#c8922a" stroke-width="2" stroke-linecap="round" fill="none"/><circle cx="2" cy="2" r="2" fill="#c8922a"/></svg></div>
   <div class="orn orn-br"><svg viewBox="0 0 26 26"><path d="M2 24V2h22" stroke="#c8922a" stroke-width="2" stroke-linecap="round" fill="none"/><circle cx="2" cy="2" r="2" fill="#c8922a"/></svg></div>
 
-  <iframe class="p-frame" id="frame"
-    allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-    allowfullscreen
-    referrerpolicy="no-referrer-when-downgrade">
-  </iframe>
+  <div class="p-frame" id="frame-container">
+    <div id="frame"></div>
+  </div>
 
   <!-- invisible tap catcher (re-shows back button) -->
   <div class="tap-catch" id="catch"></div>
@@ -95,7 +93,6 @@
 
 </div>
 
-<script src="https://www.youtube.com/iframe_api"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
