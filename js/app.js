@@ -151,7 +151,7 @@ async function openTemple(t) {
 
   if (s.live && s.videoId) {
     frameEl.src =
-      `https://www.youtube.com/embed/live_stream?channel=UCT1egsvA08YcdMLiEu1DTRg` +
+      `https://www.youtube-nocookie.com/embed/${s.videoId}` +
       `?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
 
     showScreen(playerEl);
