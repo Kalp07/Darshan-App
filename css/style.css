@@ -241,6 +241,7 @@ body {
 .badge.live    { background: rgba(46,204,113,.15); color: var(--live);  border: 1px solid rgba(46,204,113,.4); }
 .badge.offline { background: rgba(90,90,90,.15);   color: #777;         border: 1px solid rgba(90,90,90,.3);  }
 .badge.loading { background: rgba(200,146,42,.12); color: var(--gold);  border: 1px solid rgba(200,146,42,.3);}
+.badge.upcoming { background: rgba(212,98,26,.15); color: var(--saffron); border: 1px solid rgba(212,98,26,.4); }
 
 .bdot {
   width: 9px; height: 9px;

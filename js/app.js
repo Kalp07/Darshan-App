@@ -36,9 +36,11 @@ const TEMPLES = [
 // ══════════════════════════════════════════════
 // STATE
 // ══════════════════════════════════════════════
-const STATUS  = {};  // channelId → { live: bool, videoId: str|null }
+const STATUS  = {};  // channelId → { live: bool, videoId: str|null, upcoming: bool, scheduledStartTime: str }
 let backTimer = null;
 let currentTemple = null;  // temple object currently open
+let player = null;         // YouTube Player instance
+let ytReady = false;       // YouTube IFrame API ready status
 
 // ══════════════════════════════════════════════
 // DOM REFS
@@ -55,8 +57,33 @@ const stext     = document.getElementById('stext');
 const refreshBtn = document.getElementById('refresh');
 
 const offlineTempleNameEl = document.getElementById('offline-temple-name');
+const offlineMsgEl        = document.getElementById('offline-msg');
+const offlineSubEl        = document.getElementById('offline-sub');
 const offlineOpenBtn      = document.getElementById('offline-open-btn');
 const offlineBackBtn      = document.getElementById('offline-back-btn');
+
+// YouTube API ready callback
+window.onYouTubeIframeAPIReady = function() {
+  ytReady = true;
+};
+
+// Gujarati date formatting helper
+function formatTimeGujarati(isoString) {
+  if (!isoString) return "";
+  try {
+    const d = new Date(isoString);
+    const options = { 
+      day: 'numeric', 
+      month: 'long', 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      hour12: true 
+    };
+    return d.toLocaleDateString('gu-IN', options);
+  } catch (e) {
+    return "";
+  }
+}
 
 // ══════════════════════════════════════════════
 // BUILD GRID
@@ -103,7 +130,9 @@ async function checkOne(t) {
     STATUS[t.channelId] = data;
 
     if (data.live) {
-      badge(t.id, "live", "● લાઈવ");
+      badge(t.id, "live", "લાઈવ"); // Only keep blinking dot, remove ● dot
+    } else if (data.upcoming) {
+      badge(t.id, "upcoming", "શેડ્યૂલ કરેલ");
     } else {
       badge(t.id, "offline", "ઑફલાઇન");
     }
@@ -143,22 +172,72 @@ async function openTemple(t) {
   currentTemple = t;
   let s = STATUS[t.channelId];
 
-  if (!s?.live) {
+  if (s === undefined || (!s.live && !s.upcoming)) {
     badge(t.id, "loading", "તપાસ...");
-
     s = await checkOne(t);
   }
 
   if (s.live && s.videoId) {
-    frameEl.src =
-      `https://www.youtube-nocookie.com/embed/${s.videoId}` +
-      `?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
-
     showScreen(playerEl);
     triggerBack();
+
+    // Load YouTube video with iframe API to catch embedding restrictions
+    if (window.YT && ytReady) {
+      if (player) {
+        try { player.destroy(); } catch (e) {}
+      }
+      player = new YT.Player('frame', {
+        videoId: s.videoId,
+        playerVars: {
+          autoplay: 1,
+          rel: 0,
+          modestbranding: 1,
+          playsinline: 1,
+          enablejsapi: 1
+        },
+        events: {
+          'onError': onPlayerError
+        }
+      });
+    } else {
+      // Fallback if API not ready
+      frameEl.src =
+        `https://www.youtube-nocookie.com/embed/${s.videoId}` +
+        `?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
+    }
   } else {
     offlineTempleNameEl.textContent = t.name;
+    
+    // Dynamic message for scheduled or normal offline state
+    if (s.upcoming && s.scheduledStartTime) {
+      offlineMsgEl.textContent = "આગામી લાઈવ પ્રસારણ";
+      offlineSubEl.textContent = "આગામી સમય: " + formatTimeGujarati(s.scheduledStartTime);
+    } else {
+      offlineMsgEl.textContent = "હાલ લાઈવ નથી";
+      offlineSubEl.textContent = "છેલ્લા વિડિઓ YouTube પર જોઈ શકો છો";
+    }
+    
     showScreen(offlineEl);
+  }
+}
+
+// Catch embedding errors (like Vaishno Devi) and show offline screen guiding to YouTube
+function onPlayerError(event) {
+  console.warn("YouTube Player error:", event.data);
+  // 101 or 150 = embedding restricted by owner
+  if (event.data === 101 || event.data === 150) {
+    if (currentTemple) {
+      offlineTempleNameEl.textContent = currentTemple.name;
+    }
+    offlineMsgEl.textContent = "આ એપમાં ઉપલબ્ધ નથી";
+    offlineSubEl.textContent = "આ વિડિઓ ફક્ત YouTube પર જ જોઈ શકાશે";
+    showScreen(offlineEl);
+
+    if (player) {
+      try { player.destroy(); } catch (e) {}
+      player = null;
+    }
+    frameEl.src = 'about:blank';
   }
 }
 
@@ -166,11 +245,25 @@ async function openTemple(t) {
 // OFFLINE INTERSTITIAL ACTIONS
 // ══════════════════════════════════════════════
 offlineOpenBtn.addEventListener('click', () => {
-  if (currentTemple) window.open(currentTemple.ytUrl, '_blank');
+  if (currentTemple) {
+    const s = STATUS[currentTemple.channelId];
+    if (s && s.videoId) {
+      window.open(`https://www.youtube.com/watch?v=${s.videoId}`, '_blank');
+    } else {
+      window.open(currentTemple.ytUrl, '_blank');
+    }
+  }
 });
 offlineOpenBtn.addEventListener('touchend', e => {
   e.preventDefault();
-  if (currentTemple) window.open(currentTemple.ytUrl, '_blank');
+  if (currentTemple) {
+    const s = STATUS[currentTemple.channelId];
+    if (s && s.videoId) {
+      window.open(`https://www.youtube.com/watch?v=${s.videoId}`, '_blank');
+    } else {
+      window.open(currentTemple.ytUrl, '_blank');
+    }
+  }
 }, { passive: false });
 
 offlineBackBtn.addEventListener('click', goHome);
@@ -222,6 +315,10 @@ function showScreen(el) {
 function goHome() {
   clearTimeout(backTimer);
   hideBack();
+  if (player) {
+    try { player.destroy(); } catch (e) {}
+    player = null;
+  }
   frameEl.src = 'about:blank';
   showScreen(homeEl);
   currentTemple = null;
