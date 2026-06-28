@@ -1,20 +1,5 @@
-// ══════════════════════════════════════════════
-// CONFIG
-// Replace with your actual YouTube Data API key.
-// In Google Cloud Console → Credentials → your key →
-// "Application restrictions" → HTTP referrers →
-// add:  https://YOUR_GITHUB_USERNAME.github.io/*
-// This prevents anyone else from using your key
-// even if they can read the source.
-// ══════════════════════════════════════════════
 const API_KEY = 'AIzaSyAbS9-AVTAGaMc5YqawUAbpXxzTLsRGYLY';
 
-// ══════════════════════════════════════════════
-// TEMPLES
-// channelId: paste the channel ID from YouTube
-// img: path to local file inside img/ folder
-//      (jpg or png, portrait/square preferred)
-// ══════════════════════════════════════════════
 const TEMPLES = [
   {
     id:        'somnath',
@@ -22,15 +7,15 @@ const TEMPLES = [
     channelId: 'UCT1egsvA08YcdMLiEu1DTRg',
     emoji:     '🔱',
     img:       'img/somnath.jpg',
-    ytUrl:     'https://www.youtube.com/@SomnathTemple/videos',
+    ytUrl:     'https://www.youtube.com/@@SomnathTempleOfficialChannel/streams',
   },
   {
     id:        'mahakal',
     name:      'મહાકાળેશ્વર',
-    channelId: 'UCW6GqPknjYIgrgPBx1L9yKQ',
+    channelId: 'UC7hmH7rEu5HPA8iDT7zkEow',
     emoji:     '🕉️',
     img:       'img/mahakal.jpg',
-    ytUrl:     'https://www.youtube.com/channel/UCW6GqPknjYIgrgPBx1L9yKQ/videos',
+    ytUrl:     'https://www.youtube.com/@ujjainmahakallive/streams',
   },
   {
     id:        'dwarka',
@@ -38,7 +23,7 @@ const TEMPLES = [
     channelId: 'UCBAvMHZO3BIfMMhOK9LMOYQ',
     emoji:     '🪷',
     img:       'img/dwarka.jpg',
-    ytUrl:     'https://www.youtube.com/channel/UCBAvMHZO3BIfMMhOK9LMOYQ/videos',
+    ytUrl:     'https://www.youtube.com/channel/UCBAvMHZO3BIfMMhOK9LMOYQ/streams',
   },
   {
     id:        'vaishno',
@@ -46,7 +31,7 @@ const TEMPLES = [
     channelId: 'UCziZy6xAlJWPzgIY4duxAeQ',
     emoji:     '🌸',
     img:       'img/vaishno.jpg',
-    ytUrl:     'https://www.youtube.com/channel/UCziZy6xAlJWPzgIY4duxAeQ/videos',
+    ytUrl:     'https://www.youtube.com/@MHONESHRADDHA/streams',
   },
 ];
 
@@ -152,7 +137,7 @@ function openTemple(t) {
   const s = STATUS[t.channelId];
 
   if (s?.live && s.videoId) {
-    // ── LIVE: embed the stream ──────────────────
+    // LIVE: embed the stream
     const src =
       `https://www.youtube-nocookie.com/embed/${s.videoId}` +
       `?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
@@ -160,7 +145,7 @@ function openTemple(t) {
     showScreen(playerEl);
     triggerBack();
   } else {
-    // ── OFFLINE: show interstitial ──────────────
+    // OFFLINE: show interstitial
     offlineTempleNameEl.textContent = t.name;
     showScreen(offlineEl);
   }
@@ -230,13 +215,6 @@ function goHome() {
   showScreen(homeEl);
   currentTemple = null;
 }
-
-// ══════════════════════════════════════════════
-// PREVENT IOS PULL-TO-REFRESH (outside home scroll)
-// ══════════════════════════════════════════════
-document.addEventListener('touchmove', e => {
-  if (!e.target.closest('#home')) e.preventDefault();
-}, { passive: false });
 
 // ══════════════════════════════════════════════
 // AUTO-REFRESH EVERY 5 MINUTES
