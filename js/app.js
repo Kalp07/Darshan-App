@@ -1,5 +1,3 @@
-const API_KEY = 'AIzaSyAbS9-AVTAGaMc5YqawUAbpXxzTLsRGYLY';
-
 const TEMPLES = [
   {
     id:        'somnath',
@@ -7,7 +5,7 @@ const TEMPLES = [
     channelId: 'UCT1egsvA08YcdMLiEu1DTRg',
     emoji:     '🔱',
     img:       'img/somnath.jpg',
-    ytUrl:     'https://www.youtube.com/@SomnathTempleOfficialChannel/streams',
+    ytUrl:     'https://www.youtube.com/@SomnathTempleOfficialChannel/live',
   },
   {
     id:        'mahakal',
@@ -15,7 +13,7 @@ const TEMPLES = [
     channelId: 'UC7hmH7rEu5HPA8iDT7zkEow',
     emoji:     '🕉️',
     img:       'img/mahakal.jpg',
-    ytUrl:     'https://www.youtube.com/@ujjainmahakallive/streams',
+    ytUrl:     'https://www.youtube.com/@ujjainmahakallive/live',
   },
   {
     id:        'dwarka',
@@ -23,7 +21,7 @@ const TEMPLES = [
     channelId: 'UCBAvMHZO3BIfMMhOK9LMOYQ',
     emoji:     '🪷',
     img:       'img/dwarka.jpg',
-    ytUrl:     'https://www.youtube.com/channel/UCBAvMHZO3BIfMMhOK9LMOYQ/streams',
+    ytUrl:     'https://www.youtube.com/channel/UCBAvMHZO3BIfMMhOK9LMOYQ/live',
   },
   {
     id:        'vaishno',
@@ -31,7 +29,7 @@ const TEMPLES = [
     channelId: 'UCziZy6xAlJWPzgIY4duxAeQ',
     emoji:     '🌸',
     img:       'img/vaishno.jpg',
-    ytUrl:     'https://www.youtube.com/@MHONESHRADDHA/streams',
+    ytUrl:     'https://www.youtube.com/@MHONESHRADDHA/live',
   },
 ];
 
@@ -54,6 +52,7 @@ const backEl    = document.getElementById('back');
 const catchEl   = document.getElementById('catch');
 const sdot      = document.getElementById('sdot');
 const stext     = document.getElementById('stext');
+const refreshBtn = document.getElementById('refresh');
 
 const offlineTempleNameEl = document.getElementById('offline-temple-name');
 const offlineOpenBtn      = document.getElementById('offline-open-btn');
@@ -95,25 +94,33 @@ async function checkAll() {
 
 async function checkOne(t) {
   try {
-    const url =
-      `https://www.googleapis.com/youtube/v3/search` +
-      `?part=id&channelId=${t.channelId}&eventType=live` +
-      `&type=video&maxResults=1&key=${API_KEY}`;
-    const r = await fetch(url);
-    const d = await r.json();
-    if (d.error) throw new Error(d.error.message);
-    const items = d.items || [];
-    if (items.length) {
-      STATUS[t.channelId] = { live: true, videoId: items[0].id.videoId };
-      badge(t.id, 'live', '● લાઈવ');
+    const r = await fetch(
+      `https://darshan-app.joshikalp111.workers.dev/?channel=${t.channelId}`
+    );
+
+    const data = await r.json();
+
+    STATUS[t.channelId] = data;
+
+    if (data.live) {
+      badge(t.id, "live", "● લાઈવ");
     } else {
-      STATUS[t.channelId] = { live: false, videoId: null };
-      badge(t.id, 'offline', 'ઑફલાઇન');
+      badge(t.id, "offline", "ઑફલાઇન");
     }
+
+    return data;
+
   } catch (e) {
-    console.warn('Live check failed for', t.name, e.message);
-    STATUS[t.channelId] = { live: false, videoId: null };
-    badge(t.id, 'offline', 'ઑફલાઇન');
+    console.warn(e);
+
+    STATUS[t.channelId] = {
+      live: false,
+      videoId: null
+    };
+
+    badge(t.id, "offline", "ઑફલાઇન");
+
+    return STATUS[t.channelId];
   }
 }
 
@@ -132,20 +139,24 @@ function setStatus(state, txt) {
 // ══════════════════════════════════════════════
 // OPEN A TEMPLE
 // ══════════════════════════════════════════════
-function openTemple(t) {
+async function openTemple(t) {
   currentTemple = t;
-  const s = STATUS[t.channelId];
+  let s = STATUS[t.channelId];
 
-  if (s?.live && s.videoId) {
-    // LIVE: embed the stream
-    const src =
-      `https://www.youtube-nocookie.com/embed/${s.videoId}` +
+  if (!s?.live) {
+    badge(t.id, "loading", "તપાસ...");
+
+    s = await checkOne(t);
+  }
+
+  if (s.live && s.videoId) {
+    frameEl.src =
+      `https://www.youtube.com/embed/live_stream?channel=UCT1egsvA08YcdMLiEu1DTRg` +
       `?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
-    frameEl.src = src;
+
     showScreen(playerEl);
     triggerBack();
   } else {
-    // OFFLINE: show interstitial
     offlineTempleNameEl.textContent = t.name;
     showScreen(offlineEl);
   }
@@ -217,16 +228,8 @@ function goHome() {
 }
 
 // ══════════════════════════════════════════════
-// AUTO-REFRESH EVERY 5 MINUTES
-// ══════════════════════════════════════════════
-function scheduleRefresh() {
-  setTimeout(() => {
-    checkAll().then(scheduleRefresh);
-  }, 5 * 60 * 1000);
-}
-
-// ══════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════
+refreshBtn.addEventListener('click', checkAll);
 buildGrid();
-checkAll().then(scheduleRefresh);
+checkAll();

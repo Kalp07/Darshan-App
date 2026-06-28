@@ -143,6 +143,24 @@ body {
   50%       { opacity: 0.25; }
 }
 
+.refresh-btn {
+  margin-left: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--gold-dim);
+  background: transparent;
+  color: var(--gold);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: .15s;
+}
+
+.refresh-btn:active {
+  transform: scale(.9);
+  border-color: var(--gold);
+}
+
 /* ══════════════════════════════
    TEMPLE GRID
 ══════════════════════════════ */
