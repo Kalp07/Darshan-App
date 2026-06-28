@@ -7,7 +7,7 @@ const TEMPLES = [
     channelId: 'UCT1egsvA08YcdMLiEu1DTRg',
     emoji:     '🔱',
     img:       'img/somnath.jpg',
-    ytUrl:     'https://www.youtube.com/@@SomnathTempleOfficialChannel/streams',
+    ytUrl:     'https://www.youtube.com/@SomnathTempleOfficialChannel/streams',
   },
   {
     id:        'mahakal',
